@@ -55,7 +55,7 @@ export const Canvas = {
           }
         }
       ],
-      layout: { name: 'preset' }, // No auto layout after initial render
+      layout: { name: 'preset' },
       userZoomingEnabled: true,
       userPanningEnabled: true,
       zoom: 1,
@@ -182,7 +182,7 @@ export const Canvas = {
       }
     }
 
-    // GROUP AUTOGAP & REFERENCE LOGIC
+    // GROUP AUTOGAP & REFERENCE LOGIC (FIXED!)
     if (data.group === 'group') {
       if (data.referenceGroup && data.groupPosition) {
         const refNode = this.cy.$id(data.referenceGroup);
@@ -196,14 +196,21 @@ export const Canvas = {
           position = { x, y };
         }
       } else if (!position) {
-        const groups = this.cy.nodes('[group="group"]');
-        let lastY = 200;
-        groups.forEach(g => { if (g.position().y > lastY) lastY = g.position().y; });
-        position = { x: 250, y: lastY + 120 };
+        // Place relative to parent system (fix!)
+        const parentSys = this.cy.$id(data.parent);
+        let baseX = 250, baseY = 200;
+        if (parentSys) {
+          const sysPos = parentSys.position();
+          baseX = sysPos.x + 100;
+          baseY = sysPos.y + 100;
+        }
+        const siblingGroups = this.cy.nodes(`[group="group"][parent="${data.parent}"]`);
+        let offsetY = baseY + siblingGroups.length * 120;
+        position = { x: baseX, y: offsetY };
       }
     }
 
-    // NODE AUTOGAP & REFERENCE LOGIC
+    // NODE AUTOGAP & REFERENCE LOGIC (FIXED!)
     if (data.group === 'node') {
       if (data.referenceNode && data.nodePosition) {
         const refNode = this.cy.$id(data.referenceNode);
@@ -217,10 +224,17 @@ export const Canvas = {
           position = { x, y };
         }
       } else if (!position) {
-        const nodes = this.cy.nodes('[group="node"]');
-        let lastY = 300;
-        nodes.forEach(n => { if (n.position().y > lastY) lastY = n.position().y; });
-        position = { x: 300, y: lastY + 80 };
+        // Place relative to parent group (fix!)
+        const parentGroup = this.cy.$id(data.parent);
+        let baseX = 300, baseY = 300;
+        if (parentGroup) {
+          const grpPos = parentGroup.position();
+          baseX = grpPos.x + 50;
+          baseY = grpPos.y + 50;
+        }
+        const siblingNodes = this.cy.nodes(`[group="node"][parent="${data.parent}"]`);
+        let offsetY = baseY + siblingNodes.length * 80;
+        position = { x: baseX, y: offsetY };
       }
     }
 
