@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>NewChartDiagram Copilot</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Core libraries for diagrams and export -->
-  <script src="libs/mermaid.min.js"></script>
-  <script src="libs/mxgraph.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
   <script src="libs/cytoscape.min.js"></script>
-  <script src="libs/html2canvas.min.js"></script>
-  <script src="libs/jspdf.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-node-editing/dist/cytoscape-node-editing.js"></script>
+  <script src="https://unpkg.com/cytoscape-cxtmenu/dist/cytoscape-cxtmenu.js"></script>
+  <script src="https://unpkg.com/cytoscape-svg/dist/cytoscape-svg.js"></script>
+  <script src="https://unpkg.com/cytoscape-edgehandles/dist/cytoscape-edgehandles.js"></script>
+  <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/jspdf/dist/jspdf.umd.min.js"></script>
 </head>
+
 <body>
   <div id="toolbar"></div>
   <div id="wizard"></div>
@@ -22,6 +25,7 @@
   </div>
   <div id="context-menu" class="hidden"></div>
   <div id="tooltip" class="hidden"></div>
-  <script src="main.js"></script>
+  <script type="module" src="main.js"></script>
 </body>
+
 </html>

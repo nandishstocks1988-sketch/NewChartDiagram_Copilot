@@ -1,3 +1,5 @@
+import { Canvas } from '../components/Canvas.js';
+
 export function setTheme(themeName) {
-  // Switch between predefined themes (light/dark/custom)
+  Canvas.toggleTheme(themeName);
 }
