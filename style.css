@@ -37,16 +37,27 @@ body {
   z-index: 999;
   min-width: 340px;
   max-width: 420px;
+  /* Add scroll for very tall popups! */
+  max-height: 80vh;
+  overflow-y: auto;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  /* If you need to guarantee scroll for wizard-fields only: */
+}
+
+.wizard-fields {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  /* Ensures wizard fields are scrollable */
 }
 
 .wizard-modal h3 {
   margin-bottom: 18px;
-}
-
-.wizard-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .wizard-fields label {

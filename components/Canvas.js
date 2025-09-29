@@ -26,7 +26,7 @@ export const Canvas = {
             'font-family': 'data(fontFamily)',
             'text-wrap': 'wrap',
             'text-max-width': 80,
-            'text-valign': 'center',
+            'text-valign': 'data(labelPosition)',
             'text-halign': 'center',
             'overlay-padding': 6,
           }
@@ -182,7 +182,7 @@ export const Canvas = {
       }
     }
 
-    // GROUP AUTOGAP & REFERENCE LOGIC (FIXED!)
+    // GROUP AUTOGAP & REFERENCE LOGIC
     if (data.group === 'group') {
       if (data.referenceGroup && data.groupPosition) {
         const refNode = this.cy.$id(data.referenceGroup);
@@ -196,7 +196,6 @@ export const Canvas = {
           position = { x, y };
         }
       } else if (!position) {
-        // Place relative to parent system (fix!)
         const parentSys = this.cy.$id(data.parent);
         let baseX = 250, baseY = 200;
         if (parentSys) {
@@ -210,7 +209,7 @@ export const Canvas = {
       }
     }
 
-    // NODE AUTOGAP & REFERENCE LOGIC (FIXED!)
+    // NODE AUTOGAP & REFERENCE LOGIC
     if (data.group === 'node') {
       if (data.referenceNode && data.nodePosition) {
         const refNode = this.cy.$id(data.referenceNode);
@@ -224,7 +223,6 @@ export const Canvas = {
           position = { x, y };
         }
       } else if (!position) {
-        // Place relative to parent group (fix!)
         const parentGroup = this.cy.$id(data.parent);
         let baseX = 300, baseY = 300;
         if (parentGroup) {
@@ -251,8 +249,16 @@ export const Canvas = {
     data.targetArrowShape = targetArrowShape;
     data.sourceArrowShape = sourceArrowShape;
     if (!data.curveStyle) data.curveStyle = "bezier";
+    // Live update: remove if already exists, then add (for edits)
+    const existing = this.cy.$id(data.id);
+    if (existing.length) existing.remove();
     this.cy.add({ group: 'edges', data });
     this.undoStack.push({ action: 'addEdge', data });
+  },
+
+  updateEdge: function (id, props) {
+    let edge = this.cy.$id(id);
+    for (let k in props) edge.data(k, props[k]);
   },
 
   updateNode: function (id, props) {
@@ -323,7 +329,7 @@ export const Canvas = {
           'font-family': 'data(fontFamily)',
           'text-wrap': 'wrap',
           'text-max-width': 80,
-          'text-valign': 'center',
+          'text-valign': 'data(labelPosition)',
           'text-halign': 'center',
           'overlay-padding': 6,
         }
@@ -339,13 +345,16 @@ export const Canvas = {
           'line-color': edgeColor,
           'target-arrow-color': edgeColor,
           'source-arrow-color': edgeColor,
-          'curve-style': 'bezier',
+          'curve-style': 'data(curveStyle)', // Use edge data
+          'line-style': 'data(lineStyle)',
           'label': 'data(label)',
           'font-size': 14,
           'color': edgeColor,
           'text-background-color': textBg,
           'text-background-opacity': 1,
-          'text-background-padding': 2
+          'text-background-padding': 2,
+          'target-arrow-shape': 'data(targetArrowShape)',
+          'source-arrow-shape': 'data(sourceArrowShape)'
         }
       }
     ]).update();

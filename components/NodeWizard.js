@@ -5,9 +5,8 @@ export const NodeWizard = {
     window.showNodeWizard = (editId = null) => {
       const wizard = document.getElementById('wizard');
       let current = editId ? Canvas.cy.$id(editId).data() : {};
-      let connectors = current.connectors || [];
+      let connectors = Array.isArray(current.connectors) ? current.connectors : [];
       const groupOptions = window.diagramState.groups.map(g => `<option value="${g.id}" ${current.parent === g.id ? 'selected' : ''}>${g.label}</option>`).join('');
-      const nodeOptions = window.diagramState.nodes.map(n => `<option value="${n.id}" ${connectors.find(c => c.target === n.id) ? 'selected' : ''}>${n.label}</option>`).join('');
       wizard.innerHTML = `
         <div class="wizard-modal" style="max-height:80vh;overflow-y:auto;">
           <h3>${editId ? 'Edit' : 'Add'} Node</h3>
@@ -71,38 +70,44 @@ export const NodeWizard = {
           <label>Search: <input type="text" id="connector-search" placeholder="Search..." /></label>
           <label>Select target nodes:
             <select id="connector-targets" multiple style="height:100px;width:180px;">
-              ${window.diagramState.nodes.map(n => `<option value="${n.id}" ${connectors.find(c => c.target === n.id) ? 'selected' : ''}>${n.label}</option>`).join('')}
+              ${window.diagramState.nodes.map(n => `<option value="${n.id}" ${connectors.find(c => c.target === n.id) ? 'selected' : ''}>${n.label} (${n.parent || ''})</option>`).join('')}
             </select>
           </label>
           <div class="chip-list" id="selected-chips">
-            ${(connectors || []).map(c => `<span class="chip">${c.target}</span>`).join('')}
+            ${(connectors || []).map(c => `<span class="chip">${c.target} <button class="chip-x" data-target="${c.target}">x</button></span>`).join('')}
           </div>
-          <label>Connector color: <input type="color" id="connector-color" value="#3949ab"/></label>
-          <label>Connector label: <input id="connector-label" value=""/></label>
+          <label>Connector color: <input type="color" id="connector-color" value="${connectors[0]?.color || '#3949ab'}"/></label>
+          <label>Connector label: <input id="connector-label" value="${connectors[0]?.label || ''}"/></label>
           <label>Connector type:
             <select id="connector-type">
-              <option value="solid">Solid</option>
-              <option value="dashed">Dashed</option>
-              <option value="dotted">Dotted</option>
+              <option value="solid" ${connectors[0]?.type === 'solid' ? 'selected' : ''}>Solid</option>
+              <option value="dashed" ${connectors[0]?.type === 'dashed' ? 'selected' : ''}>Dashed</option>
+              <option value="dotted" ${connectors[0]?.type === 'dotted' ? 'selected' : ''}>Dotted</option>
             </select>
           </label>
           <label>Curve Style:
             <select id="connector-curve">
-              <option value="bezier">Bezier</option>
-              <option value="unbundled-bezier">Unbundled Bezier</option>
-              <option value="straight">Straight</option>
-              <option value="taxi">Taxi</option>
+              <option value="bezier" ${connectors[0]?.curveStyle === 'bezier' ? 'selected' : ''}>Bezier</option>
+              <option value="unbundled-bezier" ${connectors[0]?.curveStyle === 'unbundled-bezier' ? 'selected' : ''}>Unbundled Bezier</option>
+              <option value="straight" ${connectors[0]?.curveStyle === 'straight' ? 'selected' : ''}>Straight</option>
+              <option value="taxi" ${connectors[0]?.curveStyle === 'taxi' ? 'selected' : ''}>Taxi</option>
             </select>
           </label>
           <label>Arrows:
             <select id="connector-arrows">
-              <option value="single">Single Arrow</option>
-              <option value="double">Double Arrow</option>
-              <option value="none">No Arrow</option>
+              <option value="single" ${connectors[0]?.arrows === 'single' ? 'selected' : ''}>Single Arrow</option>
+              <option value="double" ${connectors[0]?.arrows === 'double' ? 'selected' : ''}>Double Arrow</option>
+              <option value="none" ${connectors[0]?.arrows === 'none' ? 'selected' : ''}>No Arrow</option>
             </select>
           </label>
           <button id="add-connector-final">Save connection</button>
         `;
+        section.querySelectorAll('.chip-x').forEach(btn => {
+          btn.onclick = () => {
+            connectors = connectors.filter(c => c.target !== btn.dataset.target);
+            btn.parentElement.remove();
+          };
+        });
         document.getElementById('connector-search').onkeyup = function () {
           const search = this.value.toLowerCase();
           const select = document.getElementById('connector-targets');
@@ -112,17 +117,27 @@ export const NodeWizard = {
         };
         document.getElementById('connector-targets').onchange = function () {
           const targets = Array.from(this.selectedOptions).map(opt => opt.value);
-          document.getElementById('selected-chips').innerHTML = targets.map(t => `<span class="chip">${t}</span>`).join('');
+          document.getElementById('selected-chips').innerHTML = targets.map(t =>
+            `<span class="chip">${t} <button class="chip-x" data-target="${t}">x</button></span>`
+          ).join('');
+          connectors = targets.map(target => ({
+            target,
+            color: document.getElementById('connector-color').value,
+            label: document.getElementById('connector-label').value,
+            type: document.getElementById('connector-type').value,
+            curveStyle: document.getElementById('connector-curve').value,
+            arrows: document.getElementById('connector-arrows').value
+          }));
         };
         document.getElementById('add-connector-final').onclick = () => {
           const targets = Array.from(document.getElementById('connector-targets').selectedOptions).map(opt => opt.value);
-          const color = document.getElementById('connector-color').value;
-          const label = document.getElementById('connector-label').value;
-          const type = document.getElementById('connector-type').value;
-          const curveStyle = document.getElementById('connector-curve').value;
-          const arrows = document.getElementById('connector-arrows').value;
           connectors = targets.map(target => ({
-            target, color, label, type, curveStyle, arrows
+            target,
+            color: document.getElementById('connector-color').value,
+            label: document.getElementById('connector-label').value,
+            type: document.getElementById('connector-type').value,
+            curveStyle: document.getElementById('connector-curve').value,
+            arrows: document.getElementById('connector-arrows').value
           }));
           section.style.display = 'none';
         };
@@ -157,24 +172,28 @@ export const NodeWizard = {
           width,
           height
         };
+
         if (editId) {
           Canvas.updateNode(editId, nodeData);
+          Canvas.cy.edges(`[source="${nodeId}"]`).remove();
+          // Do NOT add node again in edit mode, only update and handle edges
         } else {
           window.diagramState.nodes.push(nodeData);
           Canvas.addNode(nodeData);
-          connectors.forEach(c => {
-            Canvas.addEdge({
-              id: `${nodeId}->${c.target}`,
-              source: nodeId,
-              target: c.target,
-              label: c.label,
-              color: c.color,
-              lineStyle: c.type,
-              curveStyle: c.curveStyle,
-              arrows: c.arrows
-            });
-          });
         }
+        // NOW add connectors/edges after node exists
+        connectors.forEach(c => {
+          Canvas.addEdge({
+            id: `${nodeId}->${c.target}`,
+            source: nodeId,
+            target: c.target,
+            label: c.label,
+            color: c.color,
+            lineStyle: c.type,
+            curveStyle: c.curveStyle,
+            arrows: c.arrows
+          });
+        });
         wizard.style.display = 'none';
       };
       document.getElementById('node-cancel').onclick = () => { wizard.style.display = 'none'; };
